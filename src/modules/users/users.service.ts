@@ -1,6 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { User } from 'src/entities/user.entity';
 import { CreateUserDTO } from './dto/create-user.dto';
+import { UserQuery } from './dto/user-query.dto';
+import { UpdateUserDTO } from './dto/update-user.dto';
+import { UserAttributes } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -9,30 +12,46 @@ export class UsersService {
     private usersRepository: typeof User,
   ) {}
 
-  //find all users
+  /**
+   * Finds all users from the database.
+   *
+   * @returns Promise resolving to array of User objects containing only name, surname, email and isVerified fields
+   */
   async findAll(): Promise<User[]> {
     return await this.usersRepository.findAll({
-      attributes: ['name', 'surname', 'email', 'isVerified'],
+      attributes: [
+        UserAttributes.NAME,
+        UserAttributes.SURNAME,
+        UserAttributes.EMAIL,
+        UserAttributes.IS_VERIFIED,
+      ],
     });
   }
 
-  /*
-   * conditions = { email: 'example@email.com' }
-   * conditions = { id_user: 12 }
+  /**
+   * Finds a single user matching the given conditions.
+   *
+   * @param conditions - The conditions to find the user by. Can be an object with the user ID, email, etc.
+   * @returns A promise resolving to the found user, or undefined if no user matches.
    */
-  async findBy(conditions: any): Promise<User> {
+  async findBy(conditions: UserQuery): Promise<User> {
     return await this.usersRepository.findOne({
-      where: conditions,
-      attributes: ['name', 'surname', 'email', 'isVerified'],
+      where: conditions as any,
+      attributes: [
+        UserAttributes.NAME,
+        UserAttributes.SURNAME,
+        UserAttributes.EMAIL,
+        UserAttributes.IS_VERIFIED,
+      ],
     });
   }
 
-  //create user
-  /* 
-      CreateUserDTO {
-
-      }  
-  */
+  /**
+   * Creates a new user record in the database.
+   *
+   * @param newUser - The user data to create the new record with.
+   * @returns The created user record.
+   */
   async create(newUser: CreateUserDTO): Promise<User> {
     return await this.usersRepository.create({
       name: newUser.name,
@@ -42,7 +61,19 @@ export class UsersService {
     });
   }
 
-  async update(userInfo: any): Promise<User> {
-    return userInfo;
+  async update(userInfo: UpdateUserDTO, id: string): Promise<any> {
+    return await this.usersRepository.update(userInfo, {
+      where: {
+        id_user: id,
+      },
+    });
+  }
+
+  async delete(id: string): Promise<any> {
+    return await this.usersRepository.destroy({
+      where: {
+        id_user: id,
+      },
+    });
   }
 }
